@@ -1,27 +1,18 @@
 import { expect, test } from "@playwright/test";
+import { ProductPage } from "../pages/ProductPage";
 
 test.describe("Products", () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto("/products");
-  });
+  let productPage: ProductPage;
 
-  test("product list loads", async ({ page }) => {
-    const productCards = page.locator(".product-image-wrapper");
-    await expect(productCards).not.toHaveCount(0);
+  test.beforeEach(async ({ page }) => {
+    productPage = new ProductPage(page);
+    await productPage.open();
   });
 
   test("opens Blue Top details", async ({ page }) => {
-    const blueTopCard = page
-      .locator(".product-image-wrapper")
-      .filter({ hasText: "Blue Top" });
-    await blueTopCard.getByRole("link", { name: "View Product" }).click();
+    await expect(productPage.productDetailsLink("Blue Top")).toBeVisible();
+    await productPage.openProduct("Blue Top");
     await expect(page).toHaveURL(/\/product_details\/\d+/);
-  });
-
-  test("product names include Blue Top", async ({ page }) => {
-    const names = page.locator(".productinfo p");
-  await expect(names.first()).toBeVisible();            // wait until the list has rendered
-  const productNames = await names.allTextContents();
-  expect(productNames).toContain("Blue Top");
+    await expect(page.getByRole("heading", { name: "Blue Top" })).toBeVisible();
   });
 });

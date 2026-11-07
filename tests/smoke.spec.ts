@@ -1,68 +1,86 @@
 // Run this spec with: npx playwright test tests/smoke.spec.ts
 import { expect, test } from "@playwright/test";
+import { LoginPage } from "../pages/loginPage";
+import { RegistrationPage } from "../pages/RegistrationPage";
 
-test.describe("Testing UI ", () => {
- test.beforeEach("Launch the application", async ({ page }) => {
-    await page.goto("/login");
-    await expect(page.getByPlaceholder("Name")).toBeVisible();
+test.describe("Testing UI", () => {
+  test("signs up for the Automation Exercise application", async (
+    { page },
+    testInfo,
+  ) => {
+    const loginPage = new LoginPage(page);
+    const registrationPage = new RegistrationPage(page);
+    const signupEmail = `mohan.${testInfo.project.name}.${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.com`;
+
+    await test.step("Open the signup page", async () => {
+      await loginPage.open();
+      await expect(loginPage.nameInput).toBeVisible();
+    });
+
+    await test.step("Enter signup details", async () => {
+      await expect(loginPage.nameInput).toBeVisible();
+      await expect(loginPage.signupEmailInput).toBeVisible();
+      await loginPage.fillSignupDetails("Mohan", signupEmail);
+      await expect(loginPage.signupButton).toBeVisible();
+      await loginPage.signup();
+    });
+
+    await test.step("Verify account information is requested", async () => {
+      await expect(
+        registrationPage.accountInformationHeading,
+      ).toBeVisible();
+    });
+
+    await test.step("Select title and enter password", async () => {
+      await expect(registrationPage.mrRadio).toBeVisible();
+      await registrationPage.selectMrTitle();
+      await expect(registrationPage.mrRadio).toBeChecked();
+      await expect(registrationPage.passwordInput).toBeVisible();
+      await registrationPage.fillPassword("Mohan@10");
+    });
+
+    await test.step("Select date of birth", async () => {
+      await expect(registrationPage.daySelect).toBeVisible();
+      await expect(registrationPage.monthSelect).toBeVisible();
+      await expect(registrationPage.yearSelect).toBeVisible();
+      await registrationPage.selectDateOfBirth("15", "March", "1995");
+    });
+
+    await test.step("Enter account details", async () => {
+      await expect(registrationPage.firstNameInput).toBeVisible();
+      await expect(registrationPage.lastNameInput).toBeVisible();
+      await expect(registrationPage.addressInput).toBeVisible();
+      await expect(registrationPage.stateInput).toBeVisible();
+      await expect(registrationPage.cityInput).toBeVisible();
+      await expect(registrationPage.zipcodeInput).toBeVisible();
+      await expect(registrationPage.mobileNumberInput).toBeVisible();
+      await registrationPage.fillAccountDetails({
+        firstName: "Mohan",
+        lastName: "Warrior",
+        address: "123 Test Street",
+        state: "Tamil Nadu",
+        city: "Chennai",
+        zipcode: "600001",
+        mobileNumber: "9876543210",
+      });
+    });
+
+    await test.step("Capture the completed form", async () => {
+      await testInfo.attach("form-filled", {
+        body: await page.screenshot({ fullPage: true }),
+        contentType: "image/png",
+      });
+    });
+
+    await test.step("Subscribe and create the account", async () => {
+      await expect(registrationPage.newsletterCheckbox).toBeVisible();
+      await registrationPage.subscribeToNewsletter();
+      await expect(registrationPage.createAccountButton).toBeVisible();
+      await registrationPage.createAccount();
+    });
+
+    await test.step("Verify account creation", async () => {
+      await expect(registrationPage.accountCreatedMessage).toBeVisible();
+    });
   });
-  
-test("Testing the Automation Pratice Application", async ({ page }, testInfo) => {
-	const signupEmail = `mohan.${testInfo.project.name}.${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.com`;
-
-	await test.step("Enter userName and Password & Click Login", async () => {
-		await page.getByPlaceholder("Name").fill("Mohan");
-		await page
-			.locator("form")
-			.filter({ hasText: "Signup" })
-			.getByPlaceholder("Email Address")
-			.fill(signupEmail);
-		await expect(page.getByRole("button", { name: "Signup" })).toBeVisible();
-		await page.getByRole("button", { name: "Signup" }).click();
-	});
-	await test.step("Verify the successful signup", async () => {
-		await expect(
-			page.getByText("Enter Account Information", { exact: true }),
-		).toBeVisible();
-	});
-await test.step("Verify the Radio Button and Enter Password", async () => {
-    await page.getByRole('radio', { name: 'Mr.' }).check();
-await expect(page.getByRole('radio', { name: 'Mr.' })).toBeChecked();
-		await page.locator('[data-qa="password"]').fill("Mohan@10");
-})
-await test.step("Validate the Select By using DOB field", async () => {
-		await page.locator('#days').selectOption('15');
-await page.locator('#months').selectOption({ label: 'March' });
-await page.locator('#years').selectOption('1995');
-	});
-await test.step("Enter the address field and Click Create Account", async () => {
-	await page.locator('[data-qa="first_name"]').fill("Mohan");
-	await page.locator('[data-qa="last_name"]').fill("Warrior");
-	await page
-		.getByRole("textbox", {
-			name: "Address * (Street address, P.O. Box, Company name, etc.)",
-		})
-		.fill("123 Test Street");
-	await page.locator('[data-qa="state"]').fill("Tamil Nadu");
-	await page.locator('[data-qa="city"]').fill("Chennai");
-	await page.locator('[data-qa="zipcode"]').fill("600001");
-  await page.locator('[data-qa="mobile_number"]').fill("9876543210");
-  });
-  await test.step("Capture the filled form", async () => {
-  await testInfo.attach("form-filled", {
-    body: await page.screenshot({ fullPage: true }),
-    contentType: "image/png",
-  });
-
-  
-})
-await test.step("Tick newsletter and create the account", async () => {
-  await page.getByLabel("Sign up for our newsletter!").check();
-  await page.getByRole("button", { name: "Create Account" }).click();
-});
-
-await test.step("Verify the account was created", async () => {
-  await expect(page.getByText("Account Created!")).toBeVisible();
-});
-});
 });
