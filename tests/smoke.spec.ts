@@ -2,14 +2,14 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("Testing UI ", () => {
- test.beforeEach("Launch the application",async ({ page }) => {
-    await page.goto("/login", { waitUntil: "domcontentloaded" });
+ test.beforeEach("Launch the application", async ({ page }) => {
+    await page.goto("/login");
+    await expect(page.getByPlaceholder("Name")).toBeVisible();
   });
   
 test("Testing the Automation Pratice Application", async ({ page }, testInfo) => {
-	const signupEmail = `mohan.${testInfo.project.name}.${Date.now()}@example.com`;
+	const signupEmail = `mohan.${testInfo.project.name}.${Date.now()}-${Math.random().toString(36).slice(2, 8)}@example.com`;
 
-	
 	await test.step("Enter userName and Password & Click Login", async () => {
 		await page.getByPlaceholder("Name").fill("Mohan");
 		await page
@@ -17,6 +17,7 @@ test("Testing the Automation Pratice Application", async ({ page }, testInfo) =>
 			.filter({ hasText: "Signup" })
 			.getByPlaceholder("Email Address")
 			.fill(signupEmail);
+		await expect(page.getByRole("button", { name: "Signup" })).toBeVisible();
 		await page.getByRole("button", { name: "Signup" }).click();
 	});
 	await test.step("Verify the successful signup", async () => {
